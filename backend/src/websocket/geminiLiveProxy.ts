@@ -95,8 +95,8 @@ export function setupWebSocketServer(server: any) {
           return;
         }
 
-        if (parsed.type === "switch_project") {
-          const newProjId = parsed.projectId;
+        if (parsed.type === "switch_project" || parsed.event === "switch_project") {
+          const newProjId = parsed.projectId || parsed.payload?.projectId;
           if (newProjId) {
             try {
               const proj = await Project.findById(newProjId);
@@ -104,6 +104,22 @@ export function setupWebSocketServer(server: any) {
                 projectPath = proj.path;
                 projectName = proj.name;
                 console.log(`[Proxy] Switched active project context to ${projectName} (${projectPath})`);
+                
+                const tree = ProjectBrain.getDirectoryTree(proj.path);
+                const fileList = tree.map((f: any) => f.relativePath).join(', ');
+
+                if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN && isSetupComplete) {
+                  geminiSocket.send(JSON.stringify({
+                    clientContent: {
+                      turns: [{
+                        role: "user",
+                        parts: [{ text: `[System Context Update] Active Project context is now switched to "${proj.name}" (Path: "${proj.path}").\nAvailable files in project: ${fileList || 'None'}` }]
+                      }],
+                      turnComplete: true
+                    }
+                  }));
+                }
+
                 ws.send(JSON.stringify({
                   type: "status",
                   message: `Active project switched to: ${projectName}`
@@ -112,6 +128,28 @@ export function setupWebSocketServer(server: any) {
             } catch (e) {
               console.error("[Proxy] Error switching project context:", e);
             }
+          }
+          return;
+        }
+
+        if (parsed.event === 'STUDENT_CODE_CHANGE') {
+          const { filePath, codeSnippet } = parsed.payload || {};
+          console.log(`[Proxy] Student edit detected on ${filePath}`);
+          ws.send(JSON.stringify({
+            type: 'STUDENT_CODE_EDIT_DETECTED',
+            payload: { message: `Student modified file ${filePath}` }
+          }));
+
+          if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN && isSetupComplete && filePath) {
+            geminiSocket.send(JSON.stringify({
+              clientContent: {
+                turns: [{
+                  role: "user",
+                  parts: [{ text: `[Student Live Code Edit] File "${filePath}" was modified by student:\n\`\`\`\n${codeSnippet}\n\`\`\`` }]
+                }],
+                turnComplete: true
+              }
+            }));
           }
           return;
         }
@@ -567,13 +605,28 @@ ${getSystemPrompt()}`;
                       projectPath = targetProject.path;
                       projectName = targetProject.name;
 
+                      const tree = ProjectBrain.getDirectoryTree(targetProject.path);
+                      const fileList = tree.map((f: any) => f.relativePath).join(', ');
+
+                      if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+                        geminiSocket.send(JSON.stringify({
+                          clientContent: {
+                            turns: [{
+                              role: "user",
+                              parts: [{ text: `[System Context Update] Switched to project "${targetProject.name}" (Path: "${targetProject.path}").\nAvailable files in project: ${fileList || 'None'}` }]
+                            }],
+                            turnComplete: true
+                          }
+                        }));
+                      }
+
                       ws.send(JSON.stringify({
                         type: "tool_call_action",
                         action: "switch_workspace",
                         payload: { projectId: targetProject._id, name: targetProject.name, path: targetProject.path }
                       }));
 
-                      result = { success: true, message: `Switched workspace project context to "${targetProject.name}"` };
+                      result = { success: true, message: `Switched workspace project context to "${targetProject.name}"`, files: fileList };
                     } else if (name === "checkCourseEnrollment" || name === "enrollCourse") {
                       const courseId = args.courseId || "react-19-mastery";
                       const defaultDesktopRoot = 'c:\\Users\\Rahis\\Desktop\\McodeProjects';
@@ -708,10 +761,34 @@ ${getSystemPrompt()}`;
                         project.path,
                       );
 
+                      ws.send(JSON.stringify({
+                        type: "tool_call_action",
+                        action: "workspace_refreshed",
+                        payload: { 
+                          projectId: project._id, 
+                          summary: execResult.parsedOutput.summary, 
+                          filesChanged: execResult.parsedOutput.filesChanged 
+                        }
+                      }));
+
+                      if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+                        geminiSocket.send(JSON.stringify({
+                          clientContent: {
+                            turns: [{
+                              role: "user",
+                              parts: [{ text: `[OpenCode Execution Completed]\nTask: ${task.title}\nStatus: ${execResult.parsedOutput.status}\nSummary: ${execResult.parsedOutput.summary}\nFiles Changed: ${execResult.parsedOutput.filesChanged.join(', ')}\nExplanation: ${execResult.parsedOutput.explanation}` }]
+                            }],
+                            turnComplete: true
+                          }
+                        }));
+                      }
+
                       result = {
                         success: true,
                         report: execResult.report.toObject(),
                         review: reviewResult,
+                        summary: execResult.parsedOutput.summary,
+                        filesChanged: execResult.parsedOutput.filesChanged
                       };
                     } else if (name === "openVSCode") {
                       const targetProjId = args.projectId || projectId;
@@ -815,11 +892,35 @@ ${getSystemPrompt()}`;
                         project.path
                       );
 
+                      ws.send(JSON.stringify({
+                        type: "tool_call_action",
+                        action: "workspace_refreshed",
+                        payload: { 
+                          projectId: project._id, 
+                          summary: execResult.parsedOutput.summary, 
+                          filesChanged: execResult.parsedOutput.filesChanged 
+                        }
+                      }));
+
+                      if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
+                        geminiSocket.send(JSON.stringify({
+                          clientContent: {
+                            turns: [{
+                              role: "user",
+                              parts: [{ text: `[OpenCode Execution Completed]\nTask: ${taskTitle}\nStatus: ${execResult.parsedOutput.status}\nSummary: ${execResult.parsedOutput.summary}\nFiles Changed: ${execResult.parsedOutput.filesChanged.join(', ')}\nExplanation: ${execResult.parsedOutput.explanation}` }]
+                            }],
+                            turnComplete: true
+                          }
+                        }));
+                      }
+
                       result = {
                         success: true,
                         task: execResult.task.toObject(),
                         report: execResult.report.toObject(),
-                        review: reviewResult
+                        review: reviewResult,
+                        summary: execResult.parsedOutput.summary,
+                        filesChanged: execResult.parsedOutput.filesChanged
                       };
                     } else if (name === "createProject") {
                       const rawPath = args.projectPath;

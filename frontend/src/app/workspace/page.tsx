@@ -221,6 +221,26 @@ export default function LiveWorkspace() {
     loadProjectTree(projId);
   };
 
+  const handleRefreshWorkspace = async () => {
+    if (!activeProjectId) return;
+    setIsLoadingTree(true);
+    appendTerminal('[Sync] Triggered manual project re-scan & memory sync...');
+    try {
+      await fetch(`http://localhost:5000/api/projects/${activeProjectId}/analyze`, {
+        method: 'POST'
+      });
+      await loadProjectTree(activeProjectId);
+      if (activeFile) {
+        await loadFileContent(activeProjectId, activeFile);
+      }
+      appendTerminal('[Sync] Desktop project directory, files tree, and memory successfully synchronized.');
+    } catch (e) {
+      console.error('Error refreshing workspace', e);
+    } finally {
+      setIsLoadingTree(false);
+    }
+  };
+
   // 5. Connect WebSocket & Tool Listeners
   useEffect(() => {
     fetchProjects();
@@ -246,9 +266,13 @@ export default function LiveWorkspace() {
           } else if (data.type === 'tool_call_action') {
             if (data.action === 'switch_workspace' && data.payload?.projectId) {
               handleSwitchProject(data.payload.projectId);
-            } else if (data.action === 'file_updated' && data.payload?.filePath) {
-              if (activeProjectId && activeFile === data.payload.filePath) {
-                loadFileContent(activeProjectId, activeFile);
+            } else if (data.action === 'workspace_refreshed' || data.action === 'file_updated') {
+              appendTerminal(`[Live Sync] ${data.payload?.summary || 'Files updated on disk. Reloading workspace...'}`);
+              if (activeProjectId) {
+                loadProjectTree(activeProjectId);
+                if (activeFile) {
+                  loadFileContent(activeProjectId, activeFile);
+                }
               }
             }
           }
@@ -265,7 +289,7 @@ export default function LiveWorkspace() {
     return () => {
       socketRef.current?.close();
     };
-  }, []);
+  }, [activeProjectId, activeFile]);
 
   // 6. Handle Live Code Typing & Auto-Save
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -399,6 +423,16 @@ export default function LiveWorkspace() {
               <Zap className={`w-3.5 h-3.5 ${studentEditDetected ? 'text-pink-400 animate-bounce' : 'text-[var(--text-muted)]'}`} />
               <span>{studentEditDetected ? 'STUDENT EDIT DETECTED!' : 'Edit Detector Listening'}</span>
             </div>
+
+            <button
+              onClick={handleRefreshWorkspace}
+              disabled={isLoadingTree}
+              className="px-3.5 py-1.5 bg-[var(--inner-box-bg)] border border-purple-800/50 hover:border-purple-500/70 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+              title="Re-scan project directory on disk and reload active file content"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoadingTree ? 'animate-spin text-purple-500' : 'text-purple-400'}`} />
+              <span>Sync Workspace</span>
+            </button>
 
             <button
               onClick={handleOpenVSCode}
