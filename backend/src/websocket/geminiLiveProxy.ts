@@ -56,8 +56,9 @@ export function setupWebSocketServer(server: any) {
     let projectPath = "";
     let projectName = "";
 
-    // ADDED: Track setup state to prevent race conditions
     let isSetupComplete = false;
+    // ADDED: Track if the client is still physically connected
+    let isClientConnected = true; 
 
     const earlyMessageQueue: string[] = [];
 
@@ -70,7 +71,6 @@ export function setupWebSocketServer(server: any) {
           return;
         }
 
-        // UPDATED: Wait for setupComplete before sending audio/text to Gemini
         if (!geminiSocket || geminiSocket.readyState !== WebSocket.OPEN || !isSetupComplete) {
           earlyMessageQueue.push(messageStr);
           return;
@@ -183,7 +183,13 @@ export function setupWebSocketServer(server: any) {
       }
     };
 
-    (async () => {
+    // FIX: Wait 500ms before connecting to Gemini to completely bypass React Strict Mode ghost connections
+    setTimeout(async () => {
+      if (!isClientConnected) {
+        console.log("Client dropped before Gemini connection started. Cancelling.");
+        return; 
+      }
+
       if (projectId) {
         try {
           const project = await Project.findById(projectId);
@@ -209,12 +215,14 @@ export function setupWebSocketServer(server: any) {
 
         geminiSocket.on("open", () => {
           console.log("Connected to Gemini Live API. Sending setup payload...");
-          ws.send(
-            JSON.stringify({
-              type: "status",
-              message: "Connected to Gemini Live API",
-            }),
-          );
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(
+              JSON.stringify({
+                type: "status",
+                message: "Connected to Gemini Live API",
+              }),
+            );
+          }
 
           const systemInstruction = `Active Project Context:
 - Project ID: ${projectId || "None"}
@@ -495,8 +503,6 @@ ${getSystemPrompt()}`;
             },
           };
           geminiSocket?.send(JSON.stringify(setupMsg));
-
-          // REMOVED: the while loop that flushed earlyMessageQueue here
         });
 
         geminiSocket.on("message", async (data: any) => {
@@ -504,7 +510,6 @@ ${getSystemPrompt()}`;
             const rawMsg = data.toString();
             const message = JSON.parse(rawMsg);
 
-            // ADDED: Catch setupComplete before allowing normal messages
             if (message.setupComplete) {
               console.log("[Proxy] Gemini Setup Complete. Flushing message queue...");
               isSetupComplete = true;
@@ -523,8 +528,7 @@ ${getSystemPrompt()}`;
                 for (const call of functionCalls) {
                   const { id, name, args } = call;
                   console.log(
-                    `[Proxy] Model requested tool call: ${name} (ID: ${id}) with args:`,
-                    args,
+                    `[Proxy] Model requested tool call: ${name} (ID: ${id})`,
                   );
 
                   ws.send(
@@ -747,7 +751,7 @@ ${getSystemPrompt()}`;
                             success: false,
                             error: `Prerequisites not completed: ${incomplete.map((i) => i.title).join(", ")}`,
                           };
-                          continue;
+                          continue; // skip execution
                         }
                       }
 
@@ -1050,14 +1054,16 @@ ${getSystemPrompt()}`;
         });
       } catch (error) {
         console.error("Error starting Gemini Live connection:", error);
-        ws.send(
-          JSON.stringify({
-            type: "error",
-            message: "Error establishing connection to Gemini.",
-          }),
-        );
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Error establishing connection to Gemini.",
+            }),
+          );
+        }
       }
-    })();
+    }, 500); // <-- FIX: Delay connection slightly to avoid React Strict Mode ghosts
 
     ws.on("message", (message: string) => {
       handleClientMessage(message.toString());
@@ -1065,8 +1071,14 @@ ${getSystemPrompt()}`;
 
     ws.on("close", () => {
       console.log("Client disconnected");
-      if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN) {
-        geminiSocket.close();
+      isClientConnected = false;
+      
+      // FIX: Hard close the Gemini connection even if it was still "CONNECTING"
+      if (geminiSocket) {
+        if (geminiSocket.readyState === WebSocket.OPEN || geminiSocket.readyState === WebSocket.CONNECTING) {
+          console.log("Cleaning up active/pending Gemini socket...");
+          geminiSocket.close();
+        }
       }
     });
   });
@@ -1076,12 +1088,9 @@ function resolveWorkspacePath(inputPath: string): string {
   let resolved = inputPath.trim();
   const homeDir = os.homedir();
 
-  // If user says "desktop" or "Desktop" or "in desktop" or similar, map it
   if (resolved.toLowerCase() === 'desktop' || resolved.toLowerCase() === 'in desktop') {
     return path.join(homeDir, 'Desktop');
   }
-
-  // Handle case-insensitive "desktop/" prefix
   if (resolved.toLowerCase().startsWith('desktop/')) {
     resolved = path.join(homeDir, 'Desktop', resolved.substring(8));
   } else if (resolved.toLowerCase().startsWith('desktop\\')) {

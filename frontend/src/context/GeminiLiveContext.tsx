@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 interface Message {
@@ -24,15 +30,23 @@ interface GeminiLiveContextType {
   activeToolToast: string | null;
 }
 
-const GeminiLiveContext = createContext<GeminiLiveContextType | undefined>(undefined);
+const GeminiLiveContext = createContext<GeminiLiveContextType | undefined>(
+  undefined,
+);
 
-export function GeminiLiveProvider({ children }: { children: React.ReactNode }) {
+export function GeminiLiveProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [isPlayingBack, setIsPlayingBack] = useState<boolean>(false);
-  const [statusMsg, setStatusMsg] = useState<string>("Initializing Voice Gate...");
+  const [statusMsg, setStatusMsg] = useState<string>(
+    "Initializing Voice Gate...",
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAgentDrawerOpen, setIsAgentDrawerOpen] = useState<boolean>(false);
   const [speechEnabled, setSpeechEnabled] = useState<boolean>(true);
@@ -46,17 +60,21 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
   const recognitionRef = useRef<any>(null);
 
   const pathnameRef = useRef(pathname);
+  const isMountedRef = useRef<boolean>(true);
+  const reconnectAttemptsRef = useRef<number>(0); // Tracks reconnect loops
 
   useEffect(() => {
     pathnameRef.current = pathname;
   }, [pathname]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     connectWebSocket();
 
     if (typeof window !== "undefined") {
       const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        (window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
@@ -64,7 +82,8 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
         recognition.lang = "en-US";
 
         recognition.onresult = (event: any) => {
-          const transcript = event.results[event.results.length - 1][0].transcript.trim();
+          const transcript =
+            event.results[event.results.length - 1][0].transcript.trim();
           parseAndSendVoiceIntent(transcript);
         };
         recognitionRef.current = recognition;
@@ -72,23 +91,39 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
     }
 
     return () => {
-      // Cleanup on unmount
-      socketRef.current?.close();
+      isMountedRef.current = false;
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
+      }
       if (processorRef.current) processorRef.current.disconnect();
-      if (mediaStreamRef.current) mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      if (mediaStreamRef.current)
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
   const connectWebSocket = () => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) return;
+    if (!isMountedRef.current) return;
+    if (
+      socketRef.current &&
+      (socketRef.current.readyState === WebSocket.OPEN ||
+        socketRef.current.readyState === WebSocket.CONNECTING)
+    ) {
+      return;
+    }
 
     setStatusMsg("Connecting to Voice Gate...");
     const ws = new WebSocket("ws://localhost:5000/api/live");
     socketRef.current = ws;
 
     ws.onopen = () => {
+      if (!isMountedRef.current) {
+        ws.close();
+        return;
+      }
       setIsConnected(true);
       setStatusMsg("Gateway Connected");
+      reconnectAttemptsRef.current = 0; // Reset attempts on successful connection
     };
 
     ws.onmessage = async (event) => {
@@ -97,25 +132,49 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
 
         if (message.type === "status") {
           setStatusMsg(message.message);
+
+          if (message.message === "Gemini connection lost") {
+            setIsConnected(false);
+            setIsRecording(false);
+          }
         } else if (message.type === "error") {
           setStatusMsg(`Error: ${message.message}`);
         } else if (message.type === "STUDENT_CODE_EDIT_DETECTED") {
-          window.dispatchEvent(new CustomEvent("mcode_student_edit_detected", { detail: message.payload }));
+          window.dispatchEvent(
+            new CustomEvent("mcode_student_edit_detected", {
+              detail: message.payload,
+            }),
+          );
         } else if (message.type === "tool_call_action") {
           setActiveToolToast(`Executing: ${message.action.toUpperCase()}`);
           setTimeout(() => setActiveToolToast(null), 4000);
 
           if (message.action === "navigate_page" && message.payload?.path) {
             router.push(message.payload.path);
-          } else if (message.action === "search_courses" || message.action === "enroll_course") {
-            if (pathnameRef.current !== "/learning-space") router.push("/learning-space");
+          } else if (
+            message.action === "search_courses" ||
+            message.action === "enroll_course"
+          ) {
+            if (pathnameRef.current !== "/learning-space")
+              router.push("/learning-space");
             setTimeout(() => {
               window.dispatchEvent(
-                new CustomEvent(message.action === "search_courses" ? "mcode_voice_search" : "mcode_voice_enroll", { detail: message.payload })
+                new CustomEvent(
+                  message.action === "search_courses"
+                    ? "mcode_voice_search"
+                    : "mcode_voice_enroll",
+                  {
+                    detail: message.payload,
+                  },
+                ),
               );
             }, 100);
           } else if (message.action === "vscode_opened") {
-            window.dispatchEvent(new CustomEvent("mcode_voice_vscode", { detail: message.payload }));
+            window.dispatchEvent(
+              new CustomEvent("mcode_voice_vscode", {
+                detail: message.payload,
+              }),
+            );
           }
         } else if (message.serverContent?.modelTurn?.parts) {
           const parts = message.serverContent.modelTurn.parts;
@@ -124,24 +183,31 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
 
           for (const part of parts) {
             // Process audio without locking thread
-            if (part.inlineData && part.inlineData.mimeType?.startsWith("audio/pcm")) {
+            if (
+              part.inlineData &&
+              part.inlineData.mimeType?.startsWith("audio/pcm")
+            ) {
               playPCMChunk(part.inlineData.data);
             }
-            // Group text chunks together
+            // Group text chunks together to prevent React state flooding
             if (part.text) {
               newTextString += part.text;
             }
           }
 
-          // Safely append streamed text to the last assistant bubble rather than making 100 new ones
+          // Safely append streamed text
           if (newTextString) {
             setMessages((prev) => {
-              if (prev.length === 0) return [{ role: "assistant", text: newTextString }];
+              if (prev.length === 0)
+                return [{ role: "assistant", text: newTextString }];
               const lastMsg = prev[prev.length - 1];
 
               if (lastMsg.role === "assistant") {
                 const updated = [...prev];
-                updated[updated.length - 1] = { ...lastMsg, text: lastMsg.text + newTextString };
+                updated[updated.length - 1] = {
+                  ...lastMsg,
+                  text: lastMsg.text + newTextString,
+                };
                 return updated;
               }
               return [...prev, { role: "assistant", text: newTextString }];
@@ -156,8 +222,25 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
     ws.onclose = () => {
       setIsConnected(false);
       setIsRecording(false);
-      setStatusMsg("Disconnected. Reconnecting...");
-      setTimeout(connectWebSocket, 3000);
+      socketRef.current = null; // Clean up dead socket reference
+
+      if (!isMountedRef.current) return;
+
+      // Hard limit on reconnects to prevent API ban / Quota exhaustion
+      if (reconnectAttemptsRef.current >= 3) {
+        setStatusMsg(
+          "Connection blocked by API Quota. Please refresh the page.",
+        );
+        return;
+      }
+
+      reconnectAttemptsRef.current += 1;
+      setStatusMsg(
+        `Disconnected. Retrying (Attempt ${reconnectAttemptsRef.current}/3)...`,
+      );
+
+      // Exponential backoff: Wait 3s, then 6s, then 9s
+      setTimeout(connectWebSocket, 3000 * reconnectAttemptsRef.current);
     };
 
     ws.onerror = () => {
@@ -168,22 +251,36 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
 
   const parseAndSendVoiceIntent = async (text: string) => {
     const lower = text.toLowerCase();
-    if (lower.includes("open vs code") || lower.includes("launch vs code") || lower.includes("show vs code")) {
+    if (
+      lower.includes("open vs code") ||
+      lower.includes("launch vs code") ||
+      lower.includes("show vs code")
+    ) {
       try {
         await fetch("http://localhost:5000/api/projects/open-vscode", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: "c:\\Users\\Rahis\\Desktop\\McodeProjects" })
+          body: JSON.stringify({
+            path: "c:\\Users\\Rahis\\Desktop\\McodeProjects",
+          }),
         });
-        window.dispatchEvent(new CustomEvent("mcode_voice_vscode", { detail: { path: "c:\\Users\\Rahis\\Desktop\\McodeProjects" } }));
-      } catch (err) { }
+        window.dispatchEvent(
+          new CustomEvent("mcode_voice_vscode", {
+            detail: { path: "c:\\Users\\Rahis\\Desktop\\McodeProjects" },
+          }),
+        );
+      } catch (err) {}
     }
   };
 
   const playPCMChunk = async (base64Data: string) => {
     try {
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        audioContextRef.current = new (
+          window.AudioContext || (window as any).webkitAudioContext
+        )({
+          sampleRate: 24000,
+        });
       }
 
       const audioCtx = audioContextRef.current;
@@ -206,7 +303,7 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
       source.buffer = audioBuffer;
       source.connect(audioCtx.destination);
 
-      setIsPlayingBack(true); // Single state update
+      setIsPlayingBack(true);
 
       const currentTime = audioCtx.currentTime;
       const startTime = Math.max(playbackTimeRef.current, currentTime);
@@ -226,17 +323,26 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
   const startRecording = async () => {
     try {
       if (recognitionRef.current) {
-        try { recognitionRef.current.start(); } catch (e) { }
+        try {
+          recognitionRef.current.start();
+        } catch (e) {}
       }
 
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioContextRef.current = new (
+          window.AudioContext || (window as any).webkitAudioContext
+        )();
       }
       const audioCtx = audioContextRef.current;
       if (audioCtx.state === "suspended") await audioCtx.resume();
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true },
+        audio: {
+          channelCount: 1,
+          sampleRate: 16000,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
       });
 
       mediaStreamRef.current = stream;
@@ -254,16 +360,23 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
       const inputSampleRate = audioCtx.sampleRate;
       processor.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
-        const pcmBuffer = downsampleAndConvertToInt16(inputData, inputSampleRate, 16000);
+        const pcmBuffer = downsampleAndConvertToInt16(
+          inputData,
+          inputSampleRate,
+          16000,
+        );
         const base64 = arrayBufferToBase64(pcmBuffer);
 
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        if (
+          socketRef.current &&
+          socketRef.current.readyState === WebSocket.OPEN
+        ) {
           socketRef.current.send(
             JSON.stringify({
               type: "audio_chunk",
               mimeType: "audio/pcm;rate=16000",
               data: base64,
-            })
+            }),
           );
         }
       };
@@ -280,7 +393,9 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
     setStatusMsg(isConnected ? "Gateway Connected" : "Disconnected");
 
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) { }
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
     }
     if (processorRef.current) {
       processorRef.current.disconnect();
@@ -299,7 +414,11 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
     }
   };
 
-  const downsampleAndConvertToInt16 = (buffer: Float32Array, inputRate: number, outputRate: number): ArrayBuffer => {
+  const downsampleAndConvertToInt16 = (
+    buffer: Float32Array,
+    inputRate: number,
+    outputRate: number,
+  ): ArrayBuffer => {
     if (inputRate === outputRate) {
       const result = new Int16Array(buffer.length);
       for (let i = 0; i < buffer.length; i++) {
@@ -310,11 +429,17 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
     }
     const ratio = inputRate / outputRate;
     const result = new Int16Array(Math.round(buffer.length / ratio));
-    let offsetResult = 0, offsetBuffer = 0;
+    let offsetResult = 0,
+      offsetBuffer = 0;
     while (offsetResult < result.length) {
       const nextOffsetBuffer = Math.round((offsetResult + 1) * ratio);
-      let accum = 0, count = 0;
-      for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+      let accum = 0,
+        count = 0;
+      for (
+        let i = offsetBuffer;
+        i < nextOffsetBuffer && i < buffer.length;
+        i++
+      ) {
         accum += buffer[i];
         count++;
       }
@@ -329,15 +454,27 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
   const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
     let binary = "";
     const bytes = new Uint8Array(buffer);
-    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    for (let i = 0; i < bytes.byteLength; i++)
+      binary += String.fromCharCode(bytes[i]);
     return window.btoa(binary);
   };
 
   return (
     <GeminiLiveContext.Provider
       value={{
-        isConnected, isRecording, isPlayingBack, statusMsg, messages, isAgentDrawerOpen,
-        setIsAgentDrawerOpen, startRecording, stopRecording, sendTextMessage, speechEnabled, setSpeechEnabled, activeToolToast
+        isConnected,
+        isRecording,
+        isPlayingBack,
+        statusMsg,
+        messages,
+        isAgentDrawerOpen,
+        setIsAgentDrawerOpen,
+        startRecording,
+        stopRecording,
+        sendTextMessage,
+        speechEnabled,
+        setSpeechEnabled,
+        activeToolToast,
       }}
     >
       {children}
@@ -347,6 +484,7 @@ export function GeminiLiveProvider({ children }: { children: React.ReactNode }) 
 
 export function useGeminiLive() {
   const context = useContext(GeminiLiveContext);
-  if (!context) throw new Error("useGeminiLive must be used within a GeminiLiveProvider");
+  if (!context)
+    throw new Error("useGeminiLive must be used within a GeminiLiveProvider");
   return context;
 }
