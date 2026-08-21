@@ -1,0 +1,43 @@
+{
+  "projects": [
+    {
+      "_id": "ds7ipgvs2pk7e4mtzlwr",
+      "createdAt": "2026-08-07T02:18:28.581Z",
+      "name": "sandbox-project",
+      "path": "c:\\Users\\Rahis\\Desktop\\mcode-agent\\sandbox-project",
+      "framework": "Unknown",
+      "activeBranch": "main",
+      "packageManager": "npm",
+      "buildTools": "Unknown",
+      "healthStatus": "healthy",
+      "lastSync": "2026-08-09T01:08:28.647Z"
+    },
+    {
+      "_id": "xvfxb5rctluvmqo6mpud",
+      "createdAt": "2026-08-09T16:02:07.386Z",
+      "name": "my-react-app",
+      "path": "C:\\Users\\galaxy\\Desktop\\my-react-app",
+      "framework": "Unknown",
+      "activeBranch": "main",
+      "packageManager": "npm",
+      "buildTools": "Vite",
+      "healthStatus": "healthy",
+      "lastSync": "2026-08-09T16:02:07.389Z"
+    }
+  ],
+  "tasks": [
+    {
+      "_id": "rz7ub9dh3rgm0em8zd84f",
+      "createdAt": "2026-08-07T02:18:36.742Z",
+      "projectId": "ds7ipgvs2pk7e4mtzlwr",
+      "title": "Implement voice controller",
+      "description": "Add voice capabilities to the front-end dashboard shell.",
+      "dependsOn": [],
+      "assignedAgent": "None",
+      "status": "pending"
+    }
+  ],
+  "decisions": [],
+  "conversations": [],
+  "agentreports": []
+}

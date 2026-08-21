@@ -1,1 +1,52 @@
+# Dependencies
 node_modules/
+jspm_packages/
+web_modules/
+
+# Debugging and Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment Variables and Secrets (Crucial)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Build and Compilation Outputs
+dist/
+build/
+lib-cov
+coverage
+.nyc_output
+
+# Testing and Coverage
+.jest/
+coverage/
+*.lcov
+
+# IDEs, Editors, and OS Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Optional: Runtime files and locks
+pids
+*.pid
+*.seed
+*.pid.lock
+.npm
+.eslintcache
+node_repl_history

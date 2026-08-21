@@ -1,0 +1,29 @@
+{
+  "name": "malangcode-backend",
+  "version": "1.0.0",
+  "description": "Backend API and WebSocket gateway for MalangCode AI Engineering Manager",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "npx tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.3.1",
+    "opencode-ai": "^1.18.16",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.7",
+    "@types/ws": "^8.5.10",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.23.9",
+    "typescript": "^5.4.5"
+  }
+}
