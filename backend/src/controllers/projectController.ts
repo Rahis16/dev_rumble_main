@@ -152,4 +152,65 @@ export class ProjectController {
       res.status(500).json({ error: (error as Error).message });
     }
   }
+
+  // Get real project directory tree
+  public static async getTree(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const project = await Project.findById(id);
+      if (!project) return res.status(404).json({ error: 'Project not found.' });
+
+      if (!fs.existsSync(project.path)) {
+        return res.status(404).json({ error: `Project directory path not found on disk: ${project.path}` });
+      }
+
+      const tree = ProjectBrain.getDirectoryTree(project.path);
+      res.json({ success: true, projectPath: project.path, tree });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  // Read single file content from disk
+  public static async readFile(req: Request, res: Response) {
+    const { id } = req.params;
+    const filePath = req.query.filePath as string;
+
+    if (!filePath) {
+      return res.status(400).json({ error: 'filePath query parameter is required.' });
+    }
+
+    try {
+      const project = await Project.findById(id);
+      if (!project) return res.status(404).json({ error: 'Project not found.' });
+
+      const content = ProjectBrain.readFile(project.path, filePath);
+      res.json({ success: true, filePath, content });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  // Write single file content to disk
+  public static async writeFile(req: Request, res: Response) {
+    const { id } = req.params;
+    const { filePath, content } = req.body;
+
+    if (!filePath || content === undefined) {
+      return res.status(400).json({ error: 'filePath and content are required in request body.' });
+    }
+
+    try {
+      const project = await Project.findById(id);
+      if (!project) return res.status(404).json({ error: 'Project not found.' });
+
+      ProjectBrain.writeFile(project.path, filePath, content);
+      project.lastSync = new Date();
+      await project.save();
+
+      res.json({ success: true, message: `Successfully updated ${filePath}`, filePath });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
 }

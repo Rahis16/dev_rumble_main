@@ -73,6 +73,10 @@ const COURSES: Course[] = [
   }
 ];
 
+import { Project } from '../models/Schemas.js';
+import { ProjectBrain } from '../services/ProjectBrain.js';
+import { MemoryBrain } from '../services/MemoryBrain.js';
+
 // GET /api/courses
 router.get('/', (req: Request, res: Response) => {
   const { category, search } = req.query;
@@ -94,8 +98,43 @@ router.get('/', (req: Request, res: Response) => {
   res.json({ success: true, count: filtered.length, courses: filtered });
 });
 
+// GET /api/courses/check-enrollment
+router.get('/check-enrollment', async (req: Request, res: Response) => {
+  const { courseId } = req.query;
+  if (!courseId) {
+    return res.status(400).json({ success: false, error: 'courseId parameter is required' });
+  }
+
+  const course = COURSES.find(c => c.id === courseId);
+  if (!course) {
+    return res.status(404).json({ success: false, error: 'Course not found' });
+  }
+
+  const defaultDesktopRoot = 'c:\\Users\\Rahis\\Desktop\\McodeProjects';
+  const targetDir = path.join(defaultDesktopRoot, course.desktopFolder);
+
+  try {
+    const existing = await Project.findOne({ 
+      $or: [
+        { path: targetDir },
+        { name: course.title },
+        { name: course.id }
+      ]
+    });
+
+    res.json({
+      success: true,
+      enrolled: !!existing,
+      project: existing || null,
+      course
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /api/courses/enroll
-router.post('/enroll', (req: Request, res: Response) => {
+router.post('/enroll', async (req: Request, res: Response) => {
   const { courseId, rootPath } = req.body;
   const course = COURSES.find(c => c.id === courseId);
 
@@ -107,22 +146,44 @@ router.post('/enroll', (req: Request, res: Response) => {
   const targetDir = path.join(rootPath || defaultDesktopRoot, course.desktopFolder);
 
   try {
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-      fs.writeFileSync(
-        path.join(targetDir, 'README.md'),
-        `# ${course.title}\n\nWorkspace synchronized with Mcode-Agent.\nLearning path: ${course.category} (${course.level}).\n`
-      );
-      fs.writeFileSync(
-        path.join(targetDir, 'App.tsx'),
-        `// ${course.title} - Live Learning Workspace\nimport React from 'react';\n\nexport default function App() {\n  return (\n    <div className="p-8 text-white bg-slate-950">\n      <h1 className="text-2xl font-bold">${course.title}</h1>\n      <p>Mcode-Agent live tutor connected. Edit this code to start learning!</p>\n    </div>\n  );\n}\n`
-      );
+    // 1. Ensure starter files exist on disk
+    ProjectBrain.ensureCourseStarterProject(targetDir, course.id, course.title);
+    MemoryBrain.ensureNovaDirectory(targetDir);
+
+    // 2. Register or update Project in MongoDB
+    let project = await Project.findOne({ 
+      $or: [
+        { path: targetDir },
+        { name: course.title },
+        { name: course.id }
+      ]
+    });
+
+    let alreadyEnrolled = false;
+    if (!project) {
+      project = new Project({
+        name: course.title,
+        path: targetDir,
+        framework: course.category === 'Frontend' ? 'React' : course.category === 'Fullstack' ? 'Next.js' : 'Python',
+        activeBranch: 'main',
+        packageManager: 'npm',
+        healthStatus: 'healthy',
+        lastSync: new Date()
+      });
+      await project.save();
+    } else {
+      alreadyEnrolled = true;
+      project.lastSync = new Date();
+      await project.save();
     }
 
     res.json({
       success: true,
-      message: `Course ${course.title} enrolled and desktop workspace synchronized at ${targetDir}`,
-      desktopFolder: targetDir,
+      alreadyEnrolled,
+      message: alreadyEnrolled 
+        ? `Course ${course.title} is already enrolled. Workspace ready.` 
+        : `Course ${course.title} successfully enrolled. Workspace initialized at ${targetDir}`,
+      project,
       course
     });
   } catch (err: any) {

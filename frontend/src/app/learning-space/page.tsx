@@ -50,6 +50,18 @@ export default function LearningSpace() {
       if (res.ok) {
         const data = await res.json();
         setCourses(data.courses);
+        
+        // Notify voice agent of current active course search results
+        if (window && (window as any).mcode_ws_socket) {
+          try {
+            (window as any).mcode_ws_socket.send(JSON.stringify({
+              type: 'set_course_context',
+              courses: data.courses
+            }));
+          } catch (e) {
+            // ignore socket state
+          }
+        }
       }
     } catch (e) {
       console.log('Error loading course catalog', e);
@@ -77,7 +89,7 @@ export default function LearningSpace() {
       window.removeEventListener('mcode_voice_search', handleVoiceSearch);
       window.removeEventListener('mcode_voice_enroll', handleVoiceEnroll);
     };
-  }, [selectedCategory, searchQuery, courses]);
+  }, [selectedCategory, searchQuery]);
 
   const handleEnrollCourse = async (course: Course) => {
     setIsEnrolling(true);
@@ -94,7 +106,10 @@ export default function LearningSpace() {
 
       if (res.ok) {
         const data = await res.json();
-        setEnrollMessage(`Synchronized course project to ${data.desktopFolder}`);
+        if (data.project?._id) {
+          localStorage.setItem('mc_active_project_id', data.project._id);
+        }
+        setEnrollMessage(data.message || `Synchronized course project to ${data.project?.path}`);
         setTimeout(() => {
           setIsEnrolling(false);
           setActiveCourseModal(null);

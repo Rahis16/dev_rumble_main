@@ -76,6 +76,46 @@ export function setupWebSocketServer(server: any) {
           return;
         }
 
+        if (parsed.type === "set_course_context") {
+          const coursesList = parsed.courses || [];
+          console.log(`[Proxy] Received course search context (${coursesList.length} courses)`);
+          if (geminiSocket && geminiSocket.readyState === WebSocket.OPEN && isSetupComplete) {
+            const contextText = coursesList.map((c: any) => `Course ID: "${c.id}", Title: "${c.title}", Tech: [${c.techStack?.join(', ')}], Path: "${c.desktopFolder}"`).join('\n');
+            const textMsg = {
+              clientContent: {
+                turns: [{
+                  role: "user",
+                  parts: [{ text: `[System Course Catalog Context]\nCurrently displayed course search results:\n${contextText}` }]
+                }],
+                turnComplete: true
+              }
+            };
+            geminiSocket.send(JSON.stringify(textMsg));
+          }
+          return;
+        }
+
+        if (parsed.type === "switch_project") {
+          const newProjId = parsed.projectId;
+          if (newProjId) {
+            try {
+              const proj = await Project.findById(newProjId);
+              if (proj) {
+                projectPath = proj.path;
+                projectName = proj.name;
+                console.log(`[Proxy] Switched active project context to ${projectName} (${projectPath})`);
+                ws.send(JSON.stringify({
+                  type: "status",
+                  message: `Active project switched to: ${projectName}`
+                }));
+              }
+            } catch (e) {
+              console.error("[Proxy] Error switching project context:", e);
+            }
+          }
+          return;
+        }
+
         if (parsed.type === "text") {
           const clientContentMsg = {
             clientContent: {
@@ -366,6 +406,51 @@ ${getSystemPrompt()}`;
                         required: ["projectPath", "projectName"]
                       }
                     },
+                    {
+                      name: "readWorkspaceFile",
+                      description: "Read the real text content of a file in the active workspace on disk.",
+                      parameters: {
+                        type: "OBJECT",
+                        properties: {
+                          filePath: { type: "STRING", description: "Relative file path inside the project (e.g. src/App.tsx, README.md)" }
+                        },
+                        required: ["filePath"]
+                      }
+                    },
+                    {
+                      name: "writeWorkspaceFile",
+                      description: "Write or update code content in a real file inside the active project workspace on disk.",
+                      parameters: {
+                        type: "OBJECT",
+                        properties: {
+                          filePath: { type: "STRING", description: "Relative file path inside the project (e.g. src/App.tsx, README.md)" },
+                          content: { type: "STRING", description: "Complete text/code content to write to the file" }
+                        },
+                        required: ["filePath", "content"]
+                      }
+                    },
+                    {
+                      name: "switchActiveProject",
+                      description: "Switch the active project context to another enrolled course or registered project.",
+                      parameters: {
+                        type: "OBJECT",
+                        properties: {
+                          projectId: { type: "STRING", description: "Project ID or Course ID/name to switch to" }
+                        },
+                        required: ["projectId"]
+                      }
+                    },
+                    {
+                      name: "checkCourseEnrollment",
+                      description: "Check if the student is already enrolled in a course. If enrolled, open workspace directly; if not enrolled, enroll student, create folder, and open workspace.",
+                      parameters: {
+                        type: "OBJECT",
+                        properties: {
+                          courseId: { type: "STRING", description: "Course ID to check/enroll (e.g. react-19-mastery, nextjs-15-fullstack, python-ai-agents, async-typescript)" }
+                        },
+                        required: ["courseId"]
+                      }
+                    },
                   ],
                 },
               ],
@@ -440,38 +525,107 @@ ${getSystemPrompt()}`;
                       }));
 
                       result = { success: true, message: `Searching courses for "${query}" (category: ${category})` };
-                    } else if (name === "enrollCourse") {
+                    } else if (name === "readWorkspaceFile") {
+                      const relPath = args.filePath;
+                      if (!projectPath) throw new Error("No active workspace project path set.");
+                      const content = ProjectBrain.readFile(projectPath, relPath);
+                      result = { success: true, filePath: relPath, content };
+                    } else if (name === "writeWorkspaceFile") {
+                      const relPath = args.filePath;
+                      const newContent = args.content;
+                      if (!projectPath) throw new Error("No active workspace project path set.");
+                      ProjectBrain.writeFile(projectPath, relPath, newContent);
+                      
+                      ws.send(JSON.stringify({
+                        type: "STUDENT_CODE_EDIT_DETECTED",
+                        payload: { message: `AI Agent modified file: ${relPath}` }
+                      }));
+
+                      ws.send(JSON.stringify({
+                        type: "tool_call_action",
+                        action: "file_updated",
+                        payload: { filePath: relPath }
+                      }));
+
+                      result = { success: true, message: `Successfully updated ${relPath}` };
+                    } else if (name === "switchActiveProject") {
+                      const targetProjIdOrName = args.projectId;
+                      let targetProject = await Project.findById(targetProjIdOrName).catch(() => null);
+                      if (!targetProject) {
+                        targetProject = await Project.findOne({
+                          $or: [
+                            { name: new RegExp(targetProjIdOrName, "i") },
+                            { path: new RegExp(targetProjIdOrName, "i") }
+                          ]
+                        });
+                      }
+
+                      if (!targetProject) {
+                        throw new Error(`Project "${targetProjIdOrName}" not found.`);
+                      }
+
+                      projectPath = targetProject.path;
+                      projectName = targetProject.name;
+
+                      ws.send(JSON.stringify({
+                        type: "tool_call_action",
+                        action: "switch_workspace",
+                        payload: { projectId: targetProject._id, name: targetProject.name, path: targetProject.path }
+                      }));
+
+                      result = { success: true, message: `Switched workspace project context to "${targetProject.name}"` };
+                    } else if (name === "checkCourseEnrollment" || name === "enrollCourse") {
                       const courseId = args.courseId || "react-19-mastery";
                       const defaultDesktopRoot = 'c:\\Users\\Rahis\\Desktop\\McodeProjects';
                       const targetDir = path.join(defaultDesktopRoot, courseId);
 
-                      if (!fs.existsSync(targetDir)) {
-                        fs.mkdirSync(targetDir, { recursive: true });
-                        fs.writeFileSync(path.join(targetDir, 'App.tsx'), `// Initialized by MalangCode Gemini Agent for ${courseId}\nexport default function App() { return <div>Welcome to ${courseId}</div>; }\n`);
-                        fs.writeFileSync(path.join(targetDir, 'package.json'), JSON.stringify({ name: courseId, version: "1.0.0" }, null, 2));
-                      }
-
+                      ProjectBrain.ensureCourseStarterProject(targetDir, courseId, courseId);
                       MemoryBrain.ensureNovaDirectory(targetDir);
 
-                      let project = await Project.findOne({ path: targetDir });
+                      let project = await Project.findOne({
+                        $or: [
+                          { path: targetDir },
+                          { name: new RegExp(courseId, "i") }
+                        ]
+                      });
+
+                      let alreadyEnrolled = !!project;
+
                       if (!project) {
                         project = new Project({
                           name: courseId,
                           path: targetDir,
                           framework: courseId.includes('react') ? 'React' : courseId.includes('next') ? 'Next.js' : 'Python',
                           activeBranch: 'main',
-                          healthStatus: 'healthy'
+                          healthStatus: 'healthy',
+                          lastSync: new Date()
                         });
                         await project.save();
                       }
 
+                      projectPath = project.path;
+                      projectName = project.name;
+
                       ws.send(JSON.stringify({
                         type: "tool_call_action",
                         action: "enroll_course",
-                        payload: { courseId, path: targetDir, projectId: project._id }
+                        payload: { courseId, path: targetDir, projectId: project._id, alreadyEnrolled }
                       }));
 
-                      result = { success: true, message: `Enrolled in course ${courseId}. Workspace created at ${targetDir}` };
+                      ws.send(JSON.stringify({
+                        type: "tool_call_action",
+                        action: "switch_workspace",
+                        payload: { projectId: project._id, name: project.name, path: project.path }
+                      }));
+
+                      result = {
+                        success: true,
+                        alreadyEnrolled,
+                        message: alreadyEnrolled
+                          ? `Course ${courseId} is already enrolled. Switching to workspace at ${targetDir}`
+                          : `Enrolled in course ${courseId}. Initialized workspace at ${targetDir}`,
+                        project
+                      };
                     } else if (name === "listProjects") {
                       const projects = await Project.find();
                       result = { projects: projects.map((p) => p.toObject()) };
