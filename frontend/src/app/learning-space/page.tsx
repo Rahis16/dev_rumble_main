@@ -115,14 +115,14 @@ export default function LearningSpace() {
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950/60 border border-purple-800/40 rounded-full text-xs font-mono text-purple-300 mb-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800/40 rounded-full text-xs font-mono text-purple-700 dark:text-purple-300 mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-pink-400" />
                 <span>Interactive Learning Space Catalog</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]">
                 Explore Practical <span className="text-gradient-purple-pink">Coding Courses</span>
               </h1>
-              <p className="text-slate-400 text-xs md:text-sm mt-1">
+              <p className="text-[var(--text-secondary)] text-xs md:text-sm mt-1">
                 Choose a course to automatically synchronize root project folders directly to your desktop workspace.
               </p>
             </div>
@@ -132,13 +132,13 @@ export default function LearningSpace() {
           <div className="glass-card p-4 rounded-2xl flex flex-col md:flex-row gap-4 justify-between items-center border-purple-900/30">
             {/* Search Input */}
             <div className="relative w-full md:w-80">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search courses or technologies..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#090a10] border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-purple-500 transition-all"
+                className="w-full bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-purple-500 transition-all"
               />
             </div>
 
@@ -151,7 +151,7 @@ export default function LearningSpace() {
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                     selectedCategory === cat
                       ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white shadow-md shadow-purple-500/20'
-                      : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800/60'
+                      : 'bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--nav-hover-bg)]'
                   }`}
                 >
                   {cat}
@@ -171,26 +171,26 @@ export default function LearningSpace() {
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-800/40 text-[10px] font-mono font-semibold text-purple-300">
+                  <span className="px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800/40 text-[10px] font-mono font-semibold text-purple-700 dark:text-purple-300">
                     {course.category}
                   </span>
-                  <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400">
+                  <span className="px-2.5 py-1 rounded-full bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[10px] font-mono text-[var(--text-muted)]">
                     {course.level}
                   </span>
                 </div>
 
-                <h3 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors">
+                <h3 className="text-lg font-bold text-[var(--text-primary)] group-hover:text-purple-500 transition-colors">
                   {course.title}
                 </h3>
 
-                <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3">
                   {course.description}
                 </p>
 
                 {/* Tech Stack Badges */}
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {course.techStack.map((tech) => (
-                    <span key={tech} className="px-2 py-0.5 rounded-md bg-[#090a10] border border-slate-800 text-[10px] font-mono text-slate-300">
+                    <span key={tech} className="px-2 py-0.5 rounded-md bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-muted)] text-[10px] font-mono">
                       {tech}
                     </span>
                   ))}
@@ -198,8 +198,8 @@ export default function LearningSpace() {
               </div>
 
               {/* Course Footer Info & Action */}
-              <div className="border-t border-slate-800/80 pt-4 flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs font-mono text-slate-400">
+              <div className="border-t border-[var(--inner-box-border)] pt-4 flex items-center justify-between">
+                <div className="flex items-center gap-4 text-xs font-mono text-[var(--text-muted)]">
                   <div className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5 text-purple-400" />
                     <span>{course.duration}</span>
@@ -225,38 +225,38 @@ export default function LearningSpace() {
         {/* COURSE ENROLLMENT MODAL */}
         <AnimatePresence>
           {activeCourseModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="glass-card max-w-lg w-full p-6 md:p-8 space-y-6 border-purple-900/40 relative"
+                className="glass-card max-w-lg w-full p-6 md:p-8 space-y-6 border-purple-900/40 relative bg-[var(--card-bg)]"
               >
                 <button
                   onClick={() => setActiveCourseModal(null)}
-                  className="absolute top-5 right-5 text-slate-400 hover:text-white transition-colors"
+                  className="absolute top-5 right-5 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
                 <div className="space-y-2">
-                  <span className="px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-800/40 text-[10px] font-mono font-semibold text-purple-300">
+                  <span className="px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800/40 text-[10px] font-mono font-semibold text-purple-700 dark:text-purple-300">
                     {activeCourseModal.category} • {activeCourseModal.level}
                   </span>
-                  <h2 className="text-xl font-extrabold text-white">{activeCourseModal.title}</h2>
-                  <p className="text-xs text-slate-400 leading-relaxed">{activeCourseModal.description}</p>
+                  <h2 className="text-xl font-extrabold text-[var(--text-primary)]">{activeCourseModal.title}</h2>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{activeCourseModal.description}</p>
                 </div>
 
                 {/* Workspace Sync Details */}
-                <div className="p-4 bg-[#090a10] rounded-xl border border-slate-800 space-y-2 text-xs font-mono">
-                  <div className="flex items-center justify-between text-slate-400">
+                <div className="p-4 bg-[var(--inner-box-bg)] rounded-xl border border-[var(--inner-box-border)] space-y-2 text-xs font-mono">
+                  <div className="flex items-center justify-between text-[var(--text-muted)]">
                     <span className="flex items-center gap-2">
                       <FolderSync className="w-4 h-4 text-purple-400" />
                       <span>Desktop Workspace Path</span>
                     </span>
                     <span className="text-emerald-400 font-semibold">SYNC READY</span>
                   </div>
-                  <p className="text-slate-200 text-[11px] truncate bg-slate-900 p-2 rounded border border-slate-800/80">
+                  <p className="text-[var(--text-primary)] text-[11px] truncate bg-[var(--card-bg)] p-2 rounded border border-[var(--inner-box-border)]">
                     c:\Users\Rahis\Desktop\McodeProjects\{activeCourseModal.desktopFolder}
                   </p>
                 </div>
@@ -271,7 +271,7 @@ export default function LearningSpace() {
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
                     onClick={() => setActiveCourseModal(null)}
-                    className="px-4 py-2.5 text-xs text-slate-400 hover:text-white transition-colors"
+                    className="px-4 py-2.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     Cancel
                   </button>

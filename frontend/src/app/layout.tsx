@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 import { GeminiLiveProvider } from "@/context/GeminiLiveContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 export default function RootLayout({
   children,
@@ -16,12 +17,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full bg-[#090d16] text-[#f8fafc] flex overflow-hidden">
-        <GeminiLiveProvider>
-          {children}
-        </GeminiLiveProvider>
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <body className="h-full bg-[var(--background)] text-[var(--foreground)] flex overflow-hidden transition-colors duration-300">
+        <ThemeProvider>
+          <GeminiLiveProvider>
+            {children}
+          </GeminiLiveProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

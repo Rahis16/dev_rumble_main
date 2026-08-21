@@ -143,32 +143,32 @@ export default function Projects() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Register Form */}
           <div className="glass-card p-6 h-fit">
-            <div className="flex items-center gap-2.5 border-b border-blue-900/20 pb-3 mb-4">
+            <div className="flex items-center gap-2.5 border-b border-[var(--inner-box-border)] pb-3 mb-4">
               <FolderPlus className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-semibold text-white">Register Workspace</h3>
+              <h3 className="font-semibold text-[var(--text-primary)]">Register Workspace</h3>
             </div>
             
             <form onSubmit={handleRegisterProject} className="space-y-4">
               <div>
-                <label className="text-xs text-slate-400 block mb-1.5 font-mono">PROJECT DIR PATH (Absolute)</label>
+                <label className="text-xs text-[var(--text-muted)] block mb-1.5 font-mono">PROJECT DIR PATH (Absolute)</label>
                 <input
                   type="text"
                   required
                   value={newPath}
                   onChange={(e) => setNewPath(e.target.value)}
                   placeholder="e.g. C:\Users\Desktop\my-app"
-                  className="w-full bg-slate-950 border border-blue-900/30 text-white text-sm rounded-lg px-4 py-2.5 outline-none focus:border-cyan-500/80 placeholder-slate-600"
+                  className="w-full bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-primary)] text-sm rounded-lg px-4 py-2.5 outline-none focus:border-cyan-500/80 placeholder-[var(--text-muted)]"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 block mb-1.5 font-mono">PROJECT ALIAS (Optional)</label>
+                <label className="text-xs text-[var(--text-muted)] block mb-1.5 font-mono">PROJECT ALIAS (Optional)</label>
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. My Nextjs Store"
-                  className="w-full bg-slate-950 border border-blue-900/30 text-white text-sm rounded-lg px-4 py-2.5 outline-none focus:border-cyan-500/80 placeholder-slate-600"
+                  className="w-full bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-primary)] text-sm rounded-lg px-4 py-2.5 outline-none focus:border-cyan-500/80 placeholder-[var(--text-muted)]"
                 />
               </div>
 
@@ -185,13 +185,13 @@ export default function Projects() {
           {/* List of projects registered */}
           <div className="xl:col-span-2 space-y-6">
             <div className="glass-card p-6">
-              <div className="flex items-center gap-2 border-b border-blue-900/20 pb-3 mb-5">
+              <div className="flex items-center gap-2 border-b border-[var(--inner-box-border)] pb-3 mb-5">
                 <FolderGit2 className="w-5 h-5 text-cyan-400" />
-                <h3 className="font-semibold text-white">Registered Workspaces</h3>
+                <h3 className="font-semibold text-[var(--text-primary)]">Registered Workspaces</h3>
               </div>
 
               {projects.length === 0 ? (
-                <div className="text-center py-16 text-slate-500 text-sm">
+                <div className="text-center py-16 text-[var(--text-muted)] text-sm">
                   <span>No workspace paths registered. Input a path to initialize MalangCode memory.</span>
                 </div>
               ) : (
@@ -204,13 +204,13 @@ export default function Projects() {
                         className={`p-4 rounded-xl border transition-all ${
                           isActive 
                             ? 'bg-blue-950/15 border-blue-500/40 shadow-lg shadow-blue-500/5' 
-                            : 'bg-slate-900/40 border-blue-900/10'
+                            : 'bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)]'
                         }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <div className="flex items-center gap-2.5">
-                              <h4 className="text-sm font-bold text-white">{p.name}</h4>
+                              <h4 className="text-sm font-bold text-[var(--text-primary)]">{p.name}</h4>
                               <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono tracking-wider ${
                                 p.healthStatus === 'healthy' 
                                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
@@ -219,7 +219,7 @@ export default function Projects() {
                                 {p.healthStatus.toUpperCase()}
                               </span>
                             </div>
-                            <span className="text-xs text-slate-400 font-mono block mt-1">{p.path}</span>
+                            <span className="text-xs text-[var(--text-muted)] font-mono block mt-1">{p.path}</span>
                           </div>
 
                           <div className="flex gap-2 shrink-0">
@@ -229,7 +229,7 @@ export default function Projects() {
                               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                                 isActive 
                                   ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' 
-                                  : 'bg-slate-900 border border-blue-900/30 text-slate-300 hover:text-white hover:border-blue-500/50'
+                                  : 'bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                               }`}
                             >
                               {isActive ? 'Active' : 'Set Active'}
@@ -238,7 +238,7 @@ export default function Projects() {
                             <button
                               onClick={() => handleAnalyze(p._id)}
                               disabled={isLoading}
-                              className="p-1.5 bg-slate-900 border border-blue-900/30 text-slate-400 hover:text-white rounded-lg hover:border-blue-500/50 transition-all"
+                              className="p-1.5 bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-lg transition-all"
                               title="Rescan project framework"
                             >
                               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -247,25 +247,25 @@ export default function Projects() {
                         </div>
 
                         {/* Project Specs */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-blue-900/10 text-xs text-slate-400">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-[var(--inner-box-border)] text-xs text-[var(--text-muted)]">
                           <div>
-                            <span className="text-[10px] text-slate-500 font-mono block">FRAMEWORK</span>
-                            <span className="text-slate-300 font-medium">{p.framework}</span>
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono block">FRAMEWORK</span>
+                            <span className="text-[var(--text-secondary)] font-medium">{p.framework}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-500 font-mono block">BRANCH</span>
-                            <div className="flex items-center gap-1 text-slate-300 font-medium">
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono block">BRANCH</span>
+                            <div className="flex items-center gap-1 text-[var(--text-secondary)] font-medium">
                               <GitBranch className="w-3.5 h-3.5 text-cyan-400" />
                               <span>{p.activeBranch}</span>
                             </div>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-500 font-mono block">PACKAGE MANAGER</span>
-                            <span className="text-slate-300 font-medium">{p.packageManager}</span>
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono block">PACKAGE MANAGER</span>
+                            <span className="text-[var(--text-secondary)] font-medium">{p.packageManager}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-slate-500 font-mono block">LAST SYNCED</span>
-                            <span className="text-slate-300 font-medium">
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono block">LAST SYNCED</span>
+                            <span className="text-[var(--text-secondary)] font-medium">
                               {p.lastSync ? new Date(p.lastSync).toLocaleTimeString() : 'N/A'}
                             </span>
                           </div>

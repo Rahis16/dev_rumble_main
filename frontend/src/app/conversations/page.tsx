@@ -114,20 +114,20 @@ export default function Conversations() {
         {/* Left Side: Session Archives list */}
         <div className="space-y-6">
           <div className="glass-card p-5 space-y-4">
-            <div className="flex items-center gap-2 border-b border-blue-900/20 pb-3">
+            <div className="flex items-center gap-2 border-b border-[var(--inner-box-border)] pb-3">
               <MessageSquareCode className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-semibold text-white">Archives</h3>
+              <h3 className="font-semibold text-[var(--text-primary)]">Archives</h3>
             </div>
 
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+              <Search className="absolute left-3 top-3 w-4 h-4 text-[var(--text-muted)]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search transcripts..."
-                className="w-full bg-slate-950/80 border border-blue-900/30 text-white text-xs rounded-lg pl-9 pr-4 py-2.5 outline-none focus:border-cyan-500/80 placeholder-slate-600"
+                className="w-full bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-primary)] text-xs rounded-lg pl-9 pr-4 py-2.5 outline-none focus:border-cyan-500/80 placeholder-[var(--text-muted)]"
               />
             </div>
 
@@ -142,18 +142,18 @@ export default function Conversations() {
                     className={`w-full text-left p-3.5 rounded-lg border transition-all ${
                       isActive 
                         ? 'bg-blue-600/15 border-blue-500/40' 
-                        : 'bg-slate-900/30 border-blue-900/10 hover:border-blue-900/30'
+                        : 'bg-[var(--inner-box-bg)] border-[var(--inner-box-border)] hover:border-purple-500/30'
                     }`}
                   >
-                    <div className="flex justify-between items-center text-[10px] text-slate-400 mb-1">
+                    <div className="flex justify-between items-center text-[10px] text-[var(--text-muted)] mb-1">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3 text-cyan-400" />
                         {s.date}
                       </span>
                       <span>{s.duration}</span>
                     </div>
-                    <h4 className="text-xs font-bold text-white truncate">{s.title}</h4>
-                    <p className="text-[10px] text-slate-500 line-clamp-2 mt-1.5 leading-relaxed">{s.summary}</p>
+                    <h4 className="text-xs font-bold text-[var(--text-primary)] truncate">{s.title}</h4>
+                    <p className="text-[10px] text-[var(--text-secondary)] line-clamp-2 mt-1.5 leading-relaxed">{s.summary}</p>
                   </button>
                 );
               })}
@@ -167,12 +167,12 @@ export default function Conversations() {
             <div className="glass-card p-6 flex flex-col justify-between min-h-[500px]">
               <div>
                 {/* Header title */}
-                <div className="flex items-center justify-between border-b border-blue-900/20 pb-4 mb-6">
+                <div className="flex items-center justify-between border-b border-[var(--inner-box-border)] pb-4 mb-6">
                   <div>
-                    <h3 className="text-lg font-bold text-white">{activeSession.title}</h3>
-                    <p className="text-xs text-slate-400 mt-1">{activeSession.date} • Session duration: {activeSession.duration}</p>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">{activeSession.title}</h3>
+                    <p className="text-xs text-[var(--text-secondary)] mt-1">{activeSession.date} • Session duration: {activeSession.duration}</p>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-blue-600/10 px-3 py-1.5 rounded-lg border border-blue-500/20 text-blue-400 font-mono text-[10px]">
+                  <div className="flex items-center gap-1.5 bg-blue-600/10 px-3 py-1.5 rounded-lg border border-blue-500/20 text-blue-500 dark:text-blue-400 font-mono text-[10px]">
                     <Speech className="w-3.5 h-3.5" />
                     <span>AUDIO LOGGED</span>
                   </div>
@@ -184,12 +184,12 @@ export default function Conversations() {
                     <div key={index} className={`flex gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[80%] p-4 rounded-xl border text-sm leading-relaxed relative group ${
                         m.role === 'user'
-                          ? 'bg-blue-600/15 border-blue-500/30 text-white rounded-br-none'
-                          : 'bg-slate-900/60 border-blue-900/15 text-slate-300 rounded-bl-none'
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 border-purple-500/30 text-white rounded-br-none shadow-md'
+                          : 'bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-primary)] rounded-bl-none'
                       }`}>
-                        <div className="flex items-center justify-between gap-6 mb-1 text-[10px] font-mono text-cyan-400/80">
-                          <span>{m.role === 'user' ? 'DEVELOPER' : 'MALANGCODE CTO'}</span>
-                          <span>{m.timestamp}</span>
+                        <div className="flex items-center justify-between gap-6 mb-1 text-[10px] font-mono text-purple-400 dark:text-cyan-400">
+                          <span className={m.role === 'user' ? 'text-blue-100 font-bold' : ''}>{m.role === 'user' ? 'DEVELOPER' : 'MALANGCODE CTO'}</span>
+                          <span className={m.role === 'user' ? 'text-blue-200' : ''}>{m.timestamp}</span>
                         </div>
                         <p>{m.text}</p>
                         
@@ -197,7 +197,7 @@ export default function Conversations() {
                         {m.role === 'assistant' && (
                           <button
                             onClick={() => handleSpeak(m.text)}
-                            className="absolute -right-9 top-1/2 -translate-y-1/2 p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-cyan-400 rounded-lg border border-blue-900/20 opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                            className="absolute -right-9 top-1/2 -translate-y-1/2 p-2 bg-[var(--inner-box-bg)] hover:bg-purple-100 dark:hover:bg-slate-800 text-[var(--text-muted)] hover:text-cyan-500 rounded-lg border border-[var(--inner-box-border)] opacity-0 group-hover:opacity-100 transition-all shadow-lg"
                             title="Play Speech Audio"
                           >
                             {isPlayingText === m.text ? (
@@ -214,13 +214,13 @@ export default function Conversations() {
               </div>
 
               {/* Bottom session summary */}
-              <div className="mt-8 pt-4 border-t border-blue-900/20 text-xs text-slate-500 leading-relaxed bg-slate-950/20 p-4 rounded-lg">
-                <span className="font-semibold block text-slate-400 font-mono text-[10px] uppercase mb-1">Session Summary Output</span>
+              <div className="mt-8 pt-4 border-t border-[var(--inner-box-border)] text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--inner-box-bg)] p-4 rounded-lg border border-[var(--inner-box-border)]">
+                <span className="font-semibold block text-[var(--text-muted)] font-mono text-[10px] uppercase mb-1">Session Summary Output</span>
                 {activeSession.summary}
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full glass-card text-slate-500 text-sm">
+            <div className="flex items-center justify-center h-full glass-card text-[var(--text-muted)] text-sm">
               <span>Select a conversation session to review details.</span>
             </div>
           )}

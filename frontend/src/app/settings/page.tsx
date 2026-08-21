@@ -133,17 +133,17 @@ export default function Settings() {
           
           {/* API Credentials */}
           <div className="glass-card p-6 space-y-4 h-fit">
-            <div className="flex items-center gap-2 border-b border-blue-900/20 pb-3">
+            <div className="flex items-center gap-2 border-b border-[var(--inner-box-border)] pb-3">
               <Key className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-semibold text-white">API Keys</h3>
+              <h3 className="font-semibold text-[var(--text-primary)]">API Keys</h3>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
               Gemini Live Speech API requires a Google AI key. We recommend defining it in <code className="text-cyan-400 font-mono">backend/.env</code>, but you can also configure it in client localStorage.
             </p>
 
-            <div className="p-3.5 bg-slate-950/50 rounded-lg border border-blue-900/10 flex justify-between items-center text-xs">
-              <span className="text-slate-400">Status in backend/.env:</span>
+            <div className="p-3.5 bg-[var(--inner-box-bg)] rounded-lg border border-[var(--inner-box-border)] flex justify-between items-center text-xs">
+              <span className="text-[var(--text-muted)]">Status in backend/.env:</span>
               {settings?.geminiKeyConfigured ? (
                 <span className="text-emerald-400 font-mono font-bold">CONFIGURED</span>
               ) : (
@@ -153,13 +153,13 @@ export default function Settings() {
 
             <form onSubmit={handleSaveGeminiKey} className="space-y-3.5 pt-2">
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1 font-mono">SET GEMINI API KEY</label>
+                <label className="text-[10px] text-[var(--text-muted)] block mb-1 font-mono">SET GEMINI API KEY</label>
                 <input
                   type="password"
                   value={geminiInputKey}
                   onChange={(e) => setGeminiInputKey(e.target.value)}
                   placeholder="Enter AIzaSy..."
-                  className="w-full bg-slate-950 border border-blue-900/30 text-white text-xs rounded-md px-3 py-2 outline-none focus:border-cyan-500/80 placeholder-slate-600"
+                  className="w-full bg-[var(--inner-box-bg)] border border-[var(--inner-box-border)] text-[var(--text-primary)] text-xs rounded-md px-3 py-2 outline-none focus:border-cyan-500/80 placeholder-[var(--text-muted)]"
                 />
               </div>
               <button
@@ -173,33 +173,33 @@ export default function Settings() {
 
           {/* Database & Diagnostics status */}
           <div className="glass-card p-6 space-y-4">
-            <div className="flex items-center gap-2 border-b border-blue-900/20 pb-3">
+            <div className="flex items-center gap-2 border-b border-[var(--inner-box-border)] pb-3">
               <Database className="w-5 h-5 text-cyan-400" />
-              <h3 className="font-semibold text-white">System Diagnostics</h3>
+              <h3 className="font-semibold text-[var(--text-primary)]">System Diagnostics</h3>
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="p-3 bg-slate-950/40 rounded border border-blue-900/10 flex justify-between items-center">
-                <span className="text-slate-400">MongoDB Connection:</span>
+              <div className="p-3 bg-[var(--inner-box-bg)] rounded border border-[var(--inner-box-border)] flex justify-between items-center">
+                <span className="text-[var(--text-muted)]">MongoDB Connection:</span>
                 <span className={`font-mono font-bold ${settings?.dbConnected ? 'text-emerald-400' : 'text-red-400'}`}>
                   {settings?.dbConnected ? 'ONLINE' : 'OFFLINE'}
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-950/40 rounded border border-blue-900/10 flex justify-between items-center">
-                <span className="text-slate-400">MongoDB Cluster String:</span>
-                <span className="font-mono text-[10px] text-slate-300 truncate max-w-[150px]" title={settings?.mongoDbUri}>
+              <div className="p-3 bg-[var(--inner-box-bg)] rounded border border-[var(--inner-box-border)] flex justify-between items-center">
+                <span className="text-[var(--text-muted)]">MongoDB Cluster String:</span>
+                <span className="font-mono text-[10px] text-[var(--text-secondary)] truncate max-w-[150px]" title={settings?.mongoDbUri}>
                   {settings?.mongoDbUri}
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-950/40 rounded border border-blue-900/10 flex justify-between items-center">
-                <span className="text-slate-400">Environment Node Node:</span>
-                <span className="font-mono text-slate-300 uppercase">{settings?.environment || 'development'}</span>
+              <div className="p-3 bg-[var(--inner-box-bg)] rounded border border-[var(--inner-box-border)] flex justify-between items-center">
+                <span className="text-[var(--text-muted)]">Environment Node Node:</span>
+                <span className="font-mono text-[var(--text-secondary)] uppercase">{settings?.environment || 'development'}</span>
               </div>
 
-              <div className="p-3 bg-slate-950/40 rounded border border-blue-900/10 flex justify-between items-center">
-                <span className="text-slate-400">Local Memory Module:</span>
+              <div className="p-3 bg-[var(--inner-box-bg)] rounded border border-[var(--inner-box-border)] flex justify-between items-center">
+                <span className="text-[var(--text-muted)]">Local Memory Module:</span>
                 <span className="font-mono text-cyan-400">FS-DIRECT ACTIVE</span>
               </div>
             </div>
@@ -211,13 +211,13 @@ export default function Settings() {
         <div className="glass-card p-6 border-red-500/20 bg-red-950/5">
           <div className="flex items-center gap-2 border-b border-red-500/10 pb-3 mb-4">
             <AlertTriangle className="w-5 h-5 text-red-400" />
-            <h3 className="font-semibold text-white">Danger Zone</h3>
+            <h3 className="font-semibold text-[var(--text-primary)]">Danger Zone</h3>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h4 className="text-xs font-bold text-white">Purge Project Memory</h4>
-              <p className="text-[11px] text-slate-400 mt-1 max-w-md leading-relaxed">
+              <h4 className="text-xs font-bold text-[var(--text-primary)]">Purge Project Memory</h4>
+              <p className="text-[11px] text-[var(--text-secondary)] mt-1 max-w-md leading-relaxed">
                 Wipes the workspace tasks.json and decisions.json contents, and synchronizes the empty arrays to the MongoDB collection to restore MalangCode to pristine templates.
               </p>
             </div>

@@ -76,14 +76,14 @@ export default function StudentDashboard() {
           
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-950/60 border border-purple-800/40 rounded-full text-xs font-mono text-purple-300">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800/40 rounded-full text-xs font-mono text-purple-700 dark:text-purple-300">
                 <Sparkles className="w-3.5 h-3.5 text-pink-400" />
                 <span>Student Learning Hub</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]">
                 Welcome Back, <span className="text-gradient-purple-pink">Developer</span>
               </h1>
-              <p className="text-slate-400 text-xs md:text-sm">
+              <p className="text-[var(--text-secondary)] text-xs md:text-sm">
                 Your Mcode-Agent live workspace is synced with your local desktop machine.
               </p>
             </div>
@@ -101,45 +101,45 @@ export default function StudentDashboard() {
         {/* STATS METRICS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div className="glass-card p-5 space-y-2">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-[var(--text-muted)]">
               <span className="text-xs font-mono uppercase tracking-wider">Learning Streak</span>
               <Flame className="w-4 h-4 text-amber-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-white">7 Days</span>
+              <span className="text-2xl font-black text-[var(--text-primary)]">7 Days</span>
               <span className="text-[10px] text-emerald-400 font-mono">+2 today</span>
             </div>
           </div>
 
           <div className="glass-card p-5 space-y-2">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-[var(--text-muted)]">
               <span className="text-xs font-mono uppercase tracking-wider">Live Tutor Time</span>
               <Clock className="w-4 h-4 text-purple-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-white">18.5 Hrs</span>
+              <span className="text-2xl font-black text-[var(--text-primary)]">18.5 Hrs</span>
               <span className="text-[10px] text-purple-400 font-mono">Interactive</span>
             </div>
           </div>
 
           <div className="glass-card p-5 space-y-2">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-[var(--text-muted)]">
               <span className="text-xs font-mono uppercase tracking-wider">Completed Lessons</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-white">25 / 56</span>
-              <span className="text-[10px] text-slate-400 font-mono">45% total</span>
+              <span className="text-2xl font-black text-[var(--text-primary)]">25 / 56</span>
+              <span className="text-[10px] text-[var(--text-muted)] font-mono">45% total</span>
             </div>
           </div>
 
           <div className="glass-card p-5 space-y-2">
-            <div className="flex items-center justify-between text-slate-400">
+            <div className="flex items-center justify-between text-[var(--text-muted)]">
               <span className="text-xs font-mono uppercase tracking-wider">Desktop Sync</span>
               <FolderSync className="w-4 h-4 text-blue-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xs font-bold text-white truncate">sandbox-project</span>
+              <span className="text-xs font-bold text-[var(--text-primary)] truncate">sandbox-project</span>
               <span className="text-[10px] text-emerald-400 font-mono">ONLINE</span>
             </div>
           </div>
@@ -150,12 +150,12 @@ export default function StudentDashboard() {
           
           {/* Left Column: Enrolled Courses */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-[var(--inner-box-border)] pb-3">
+              <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
                 <GraduationCap className="w-4 h-4 text-purple-400" />
                 <span>My Active Enrolled Courses</span>
               </h2>
-              <Link href="/learning-space" className="text-xs text-purple-400 hover:underline font-mono">
+              <Link href="/learning-space" className="text-xs text-purple-500 hover:underline font-mono">
                 + Browse Catalog
               </Link>
             </div>
@@ -165,11 +165,11 @@ export default function StudentDashboard() {
                 <div key={course.id} className="glass-card p-6 space-y-4 border-purple-900/30">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <span className="px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/40 text-[10px] font-mono text-purple-300">
+                      <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800/40 text-[10px] font-mono text-purple-700 dark:text-purple-300">
                         {course.category}
                       </span>
-                      <h3 className="text-lg font-bold text-white mt-1">{course.title}</h3>
-                      <p className="text-xs font-mono text-slate-400 mt-1">Desktop Folder: {course.desktopFolder}</p>
+                      <h3 className="text-lg font-bold text-[var(--text-primary)] mt-1">{course.title}</h3>
+                      <p className="text-xs font-mono text-[var(--text-muted)] mt-1">Desktop Folder: {course.desktopFolder}</p>
                     </div>
 
                     <Link
@@ -182,11 +182,11 @@ export default function StudentDashboard() {
 
                   {/* Progress bar */}
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs text-slate-400 font-mono">
+                    <div className="flex justify-between text-xs text-[var(--text-muted)] font-mono">
                       <span>Course Progress</span>
                       <span>{course.completedLessons} / {course.totalLessons} Lessons ({course.progress}%)</span>
                     </div>
-                    <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                    <div className="w-full h-2 bg-[var(--inner-box-bg)] rounded-full overflow-hidden border border-[var(--inner-box-border)]">
                       <div 
                         className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-500" 
                         style={{ width: `${course.progress}%` }}
@@ -200,8 +200,8 @@ export default function StudentDashboard() {
 
           {/* Right Column: Recent Live Tutor Interventions */}
           <div className="space-y-6">
-            <div className="border-b border-slate-800 pb-3">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+            <div className="border-b border-[var(--inner-box-border)] pb-3">
+              <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
                 <Activity className="w-4 h-4 text-pink-400" />
                 <span>Live Tutor Interventions</span>
               </h2>
@@ -209,12 +209,12 @@ export default function StudentDashboard() {
 
             <div className="glass-card p-5 space-y-4">
               {tutorLog.map((log, index) => (
-                <div key={index} className="p-3 bg-[#090a10] rounded-xl border border-slate-800/80 space-y-1.5">
+                <div key={index} className="p-3 bg-[var(--inner-box-bg)] rounded-xl border border-[var(--inner-box-border)] space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] font-mono">
                     <span className="text-purple-400 font-semibold">{log.title}</span>
-                    <span className="text-slate-500">{log.time}</span>
+                    <span className="text-[var(--text-muted)]">{log.time}</span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">{log.detail}</p>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{log.detail}</p>
                 </div>
               ))}
             </div>

@@ -103,8 +103,8 @@ export default function Workflow() {
         <div className="glass-card p-5 flex items-start gap-4 border-cyan-500/20 bg-cyan-950/5">
           <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-semibold text-white">Interactive Workflow Engine</h4>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            <h4 className="text-sm font-semibold text-[var(--text-primary)]">Interactive Workflow Engine</h4>
+            <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
               Below is the operational sequence of MalangCode. During interaction, tasks progress through these seven checkpoints to orchestrate code modifications, run test frameworks, and speak summaries. Click on any step node below to inspect details.
             </p>
           </div>
@@ -114,7 +114,7 @@ export default function Workflow() {
           
           {/* Left / Center Grid Column: Visual flow chart mapping */}
           <div className="xl:col-span-2 glass-card p-6 flex flex-col justify-center min-h-[500px]">
-            <h3 className="text-xs font-mono text-cyan-400 uppercase tracking-widest border-b border-blue-900/20 pb-3 mb-8">
+            <h3 className="text-xs font-mono text-cyan-400 uppercase tracking-widest border-b border-[var(--inner-box-border)] pb-3 mb-8">
               System Pipeline Visualizer
             </h3>
 
@@ -139,14 +139,14 @@ export default function Workflow() {
                       className={`w-full max-w-sm flex items-center gap-4 p-4 rounded-xl border text-left transition-all duration-300 relative group ${
                         isSelected 
                           ? 'bg-blue-600/15 border-blue-400 shadow-lg shadow-blue-500/10 scale-105' 
-                          : 'bg-slate-900/40 border-blue-900/10 hover:border-blue-900/30'
+                          : 'bg-[var(--inner-box-bg)] border-[var(--inner-box-border)] hover:border-purple-500/40'
                       }`}
                     >
                       {/* Step Number Badge */}
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center font-mono text-[10px] font-bold shrink-0 ${
                         isSelected 
                           ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20' 
-                          : 'bg-slate-950 text-slate-500 border border-blue-900/20'
+                          : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--inner-box-border)]'
                       }`}>
                         {step.id}
                       </span>
@@ -155,17 +155,17 @@ export default function Workflow() {
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center border shrink-0 ${
                         isSelected 
                           ? 'bg-blue-600/10 border-blue-400 text-blue-400' 
-                          : 'bg-slate-950 border-blue-900/20 text-slate-400'
+                          : 'bg-[var(--card-bg)] border-[var(--inner-box-border)] text-[var(--text-muted)]'
                       }`}>
                         <Icon className="w-5 h-5" />
                       </div>
 
                       {/* Text details */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-white group-hover:text-cyan-400 transition-colors">
+                        <h4 className="text-xs font-bold text-[var(--text-primary)] group-hover:text-cyan-400 transition-colors">
                           {step.name}
                         </h4>
-                        <span className="text-[10px] text-slate-500 block truncate mt-0.5">{step.service}</span>
+                        <span className="text-[10px] text-[var(--text-muted)] block truncate mt-0.5">{step.service}</span>
                       </div>
 
                       {/* Status indicator */}
@@ -174,7 +174,7 @@ export default function Workflow() {
                           ? 'bg-emerald-500' 
                           : step.status === 'active'
                           ? 'bg-blue-500 animate-pulse'
-                          : 'bg-slate-700'
+                          : 'bg-slate-500'
                       }`} />
                     </button>
                   </React.Fragment>
@@ -186,39 +186,39 @@ export default function Workflow() {
           {/* Right Grid Column: Node detail inspector card */}
           <div>
             <div className="glass-card p-6 space-y-6 sticky top-6">
-              <div className="border-b border-blue-900/20 pb-4">
+              <div className="border-b border-[var(--inner-box-border)] pb-4">
                 <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest block mb-1">Step Details</span>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-[var(--text-primary)]">
                   {steps[selectedStep - 1].name}
                 </h3>
-                <span className="text-xs text-slate-400 font-mono block mt-1">
+                <span className="text-xs text-[var(--text-muted)] font-mono block mt-1">
                   Handler: {steps[selectedStep - 1].service}
                 </span>
               </div>
 
               <div className="space-y-4 text-xs">
                 <div>
-                  <span className="text-slate-500 font-mono block uppercase mb-1">Functional Description</span>
-                  <p className="text-slate-300 leading-relaxed bg-slate-950/30 p-3 rounded-lg border border-blue-900/5">
+                  <span className="text-[var(--text-muted)] font-mono block uppercase mb-1">Functional Description</span>
+                  <p className="text-[var(--text-secondary)] leading-relaxed bg-[var(--inner-box-bg)] p-3 rounded-lg border border-[var(--inner-box-border)]">
                     {steps[selectedStep - 1].description}
                   </p>
                 </div>
 
                 <div>
-                  <span className="text-slate-500 font-mono block uppercase mb-1">Under the hood implementation</span>
-                  <p className="text-slate-400 leading-relaxed bg-slate-950/30 p-3 rounded-lg border border-blue-900/5">
+                  <span className="text-[var(--text-muted)] font-mono block uppercase mb-1">Under the hood implementation</span>
+                  <p className="text-[var(--text-secondary)] leading-relaxed bg-[var(--inner-box-bg)] p-3 rounded-lg border border-[var(--inner-box-border)]">
                     {steps[selectedStep - 1].details}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-blue-900/10 flex justify-between items-center text-[10px] font-mono">
-                  <span className="text-slate-500">PIPELINE STATUS</span>
+                <div className="pt-4 border-t border-[var(--inner-box-border)] flex justify-between items-center text-[10px] font-mono">
+                  <span className="text-[var(--text-muted)]">PIPELINE STATUS</span>
                   <span className={`px-2 py-0.5 rounded font-bold ${
                     steps[selectedStep - 1].status === 'success'
                       ? 'bg-emerald-500/10 text-emerald-400'
                       : steps[selectedStep - 1].status === 'active'
                       ? 'bg-blue-600/10 text-blue-400 animate-pulse'
-                      : 'bg-slate-950 text-slate-500'
+                      : 'bg-slate-200 dark:bg-slate-950 text-[var(--text-muted)]'
                   }`}>
                     {steps[selectedStep - 1].status.toUpperCase()}
                   </span>
